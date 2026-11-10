@@ -10,6 +10,7 @@
         <result property="apiId"    column="api_id"    />
         <result property="recordCount"    column="record_count"    />
         <result property="diffType"    column="diff_type"    />
+        <result property="ignoreFields"    column="ignore_fields"    />
         <result property="position"    column="position"    />
     </resultMap>
 
@@ -19,6 +20,7 @@
         <result property="apiId"    column="api_id"    />
         <result property="recordCount"    column="record_count"    />
         <result property="diffType"    column="diff_type"    />
+        <result property="ignoreFields"    column="ignore_fields"    />
         <result property="position"    column="position"    />
         <result property="domainName"    column="domain_name"    />
         <result property="deptName"    column="dept_name"    />
@@ -27,13 +29,13 @@
     </resultMap>
 
     <sql id="selectTaskApiRelationVo">
-        select task_api_relation_id, task_id, api_id, record_count, diff_type, position from bss_task_api_relation
+        select task_api_relation_id, task_id, api_id, record_count, diff_type, ignore_fields, position from bss_task_api_relation
     </sql>
 
 
 
     <select id="selectTaskApiRelationViewListByDeptId" parameterType="Integer" resultMap="TaskApiRelationViewResult">
-       SELECT re.task_api_relation_id, re.position ,api.recordable_count as record_count, re.diff_type as diff_type, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
+       SELECT re.task_api_relation_id, re.position ,api.recordable_count as record_count, re.diff_type as diff_type, re.ignore_fields as ignore_fields, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
         LEFT JOIN bss_task_api_relation re on  api.api_id = re.api_id
         LEFT JOIN bss_domain  domain ON domain.id = api.domain_id
         LEFT  JOIN sys_dept d on api.sys_dept_id = d.dept_id
@@ -42,7 +44,7 @@
     </select>
 
     <select id="selectTaskApiRelationViewListByDomainId" parameterType="Integer" resultMap="TaskApiRelationViewResult">
-       SELECT re.task_api_relation_id, re.position , api.recordable_count as record_count, re.diff_type as diff_type, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
+       SELECT re.task_api_relation_id, re.position , api.recordable_count as record_count, re.diff_type as diff_type, re.ignore_fields as ignore_fields, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
         LEFT JOIN bss_task_api_relation re on  api.api_id = re.api_id
         LEFT JOIN bss_domain  domain ON domain.id = api.domain_id
         LEFT  JOIN sys_dept d on api.sys_dept_id = d.dept_id
@@ -51,7 +53,7 @@
     </select>
 
     <select id="selectTaskApiRelationViewListByApiNameAndDomainName" parameterType="TaskApiRelationView" resultMap="TaskApiRelationViewResult">
-       SELECT re.task_api_relation_id, re.position ,api.recordable_count as record_count, re.diff_type as diff_type, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
+       SELECT re.task_api_relation_id, re.position ,api.recordable_count as record_count, re.diff_type as diff_type, re.ignore_fields as ignore_fields, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
         LEFT JOIN bss_task_api_relation re on  api.api_id = re.api_id
         LEFT JOIN bss_domain  domain ON domain.id = api.domain_id
         LEFT  JOIN sys_dept d on api.sys_dept_id = d.dept_id
@@ -61,7 +63,7 @@
 
 
     <select id="selectTaskApiRelationViewListByTaskId" parameterType="Integer" resultMap="TaskApiRelationViewResult">
-        SELECT re.task_api_relation_id, re.position ,re.record_count as record_count, re.diff_type as diff_type, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
+        SELECT re.task_api_relation_id, re.position ,re.record_count as record_count, re.diff_type as diff_type, re.ignore_fields as ignore_fields, api.api_id as api_id,api.name as api_name,domain.name as domain_name, d.dept_name as dept_name, u.user_name as create_by_name from bss_api api
 
         LEFT JOIN bss_task_api_relation re on  api.api_id = re.api_id
         LEFT JOIN bss_domain  domain ON domain.id = api.domain_id
@@ -79,6 +81,7 @@
             <if test="diffType != null "> and diff_type = #{diffType}</if>
             <if test="position != null "> and position = #{position}</if>
         </where>
+        order by task_api_relation_id desc
     </select>
 
     <select id="selectTaskApiRelationById" parameterType="Integer" resultMap="TaskApiRelationResult">
@@ -87,10 +90,10 @@
     </select>
 
     <insert id="insertTaskApiRelation" parameterType="TaskApiRelation" useGeneratedKeys="true" keyProperty="taskApiRelationId">
-        insert into bss_task_api_relation (task_id,api_id,record_count,diff_type,position )
+        insert into bss_task_api_relation (task_id,api_id,record_count,diff_type,ignore_fields,position )
         values
         <foreach collection="taskApiRelations"  index="index" item="item" separator=",">
-            (#{item.taskId},#{item.apiId},#{item.recordCount}, #{item.diffType},#{item.position})
+            (#{item.taskId},#{item.apiId},#{item.recordCount}, #{item.diffType}, #{item.ignoreFields},#{item.position})
         </foreach>
     </insert>
 
@@ -101,6 +104,7 @@
             <if test="apiId != null">api_id = #{apiId},</if>
             <if test="recordCount != null">record_count = #{recordCount},</if>
             <if test="diffType != null">diff_type = #{diffType},</if>
+            <if test="ignoreFields != null">ignore_fields = #{ignoreFields},</if>
             <if test="position != null">position = #{position},</if>
         </trim>
         where task_api_relation_id = #{taskApiRelationId}

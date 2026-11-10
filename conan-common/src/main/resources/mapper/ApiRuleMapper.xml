@@ -20,6 +20,7 @@
             <if test="apiId != null "> and api_id = #{apiId}</if>
             <if test="ruleJson != null  and ruleJson != ''"> and rule_json = #{ruleJson}</if>
         </where>
+        order by id desc
     </select>
 
     <select id="selectApiRuleById" parameterType="Integer" resultMap="ApiRuleResult">

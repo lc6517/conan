@@ -1,6 +1,8 @@
 package com.tal.wangxiao.conan.agent.service.impl;
 
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.tal.wangxiao.conan.agent.cache.CodeCache;
 import com.tal.wangxiao.conan.agent.model.DiffMode;
@@ -26,8 +28,12 @@ import com.tal.wangxiao.conan.utils.diff.TextDiffUtils;
 import com.tal.wangxiao.conan.utils.diff.core.TextDiffResult;
 import com.tal.wangxiao.conan.utils.json.JsonCheckUtils;
 import com.tal.wangxiao.conan.utils.str.StringHandlerUtils;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import com.tal.wangxiao.json.compare.comparator.JSONKeyCompare;
+import com.tal.wangxiao.json.compare.mode.JSONDiffKeyMode;
 import com.tal.wangxiao.json.compare.result.JSONCompareResult;
+import com.tal.wangxiao.json.compare.utils.JSONDiffObject;
 import com.tal.wangxiao.json.compare.utils.JSONResultHandlerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -116,6 +122,12 @@ public class DiffServiceImpl implements AgentDiffService {
         int growSize = 80 / apiList.size();//每次递增进度
         //遍历apiID diff后写入redis
         for (Integer apiId : apiList) {
+            // 实时从 bss_api 表查询该接口的忽略字段（每次处理该接口时查一次，支持比对过程中修改即时生效）
+            String apiIgnoreFieldsStr = diffMapper.getIgnoreFieldsByApiId(apiId);
+            Set<String> apiIgnoreFields = Collections.emptySet();
+            if (!StringHandlerUtils.isNull(apiIgnoreFieldsStr)) {
+                apiIgnoreFields = new HashSet<>(Arrays.asList(apiIgnoreFieldsStr.split(",")));
+            }
             //获取同一 record_id 相同api的request_ID set去重
             List<RecordResult> findByRecordIdAndApiId = recordResultRepository.findByRecordIdAndApiId(recordId, apiId);
             Set<String> apiRequestSet = new HashSet<String>();
@@ -137,9 +149,30 @@ public class DiffServiceImpl implements AgentDiffService {
                 //获取diff规则
                 String compareJson = strReplceHandler(redisTemplate.opsForValue().get(compreDataKey));
                 String baseJson = strReplceHandler(redisTemplate.opsForValue().get(BaseDataKey));
+
+                // 解析该接口的比对类型和忽略字段
+                int diffType = 0;
+                Set<String> ignoreFields = apiIgnoreFields;
+                // 接口级未配置忽略字段时，回退到任务关联级配置
+                if (ignoreFields.isEmpty()) {
+                    HashMap<Integer, TaskApiRelation> taskApiRelationHashMap = diffMode.getTaskApiRelationMap();
+                    if (taskApiRelationHashMap != null) {
+                        TaskApiRelation taskApiRelation = taskApiRelationHashMap.get(apiId);
+                        if (taskApiRelation != null) {
+                            if (taskApiRelation.getDiffType() != null) {
+                                diffType = taskApiRelation.getDiffType();
+                            }
+                            if (!StringHandlerUtils.isNull(taskApiRelation.getIgnoreFields())) {
+                                ignoreFields = new HashSet<>(Arrays.asList(taskApiRelation.getIgnoreFields().split(",")));
+                            }
+                        }
+                    }
+                }
+                log.info("diff比对 apiId={}, diffType={}, ignoreFields={}(实时从bss_api加载)", apiId, diffType, ignoreFields);
+
                 //response is JSON, compareJson 和 BaseDataKey 不是JSON
                 if (diffMode.getTaskApiRespnseIsJsonMap().get(apiId) == null) {
-                    textDiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, jsonCompareResultsList);
+                    textDiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, jsonCompareResultsList, ignoreFields);
                 } else {
                     if (diffMode.getTaskApiRespnseIsJsonMap().get(apiId) == 0) {
                         if (!JsonCheckUtils.isJSONValidByalibaba(compareJson)) {
@@ -157,26 +190,16 @@ public class DiffServiceImpl implements AgentDiffService {
                         redisTemplateTool.setLogByDiffId_ERROR(diffId, "请检查对比json的redis key=" + compreDataKey + "与baseJson的redis key=" + BaseDataKey + "是否在redis中有Value");
                         continue;
                     }
-                    int diffType = 0;
-                    HashMap<Integer, TaskApiRelation> taskApiRelationHashMap = diffMode.getTaskApiRelationMap();
-                    if (taskApiRelationHashMap != null) {
-                        TaskApiRelation taskApiRelation = taskApiRelationHashMap.get(apiId);
-                        if (taskApiRelation != null) {
-                            if (taskApiRelation.getDiffType() != null) {
-                                diffType = taskApiRelation.getDiffType();
-                            }
-                        }
-                    }
 
                     switch (diffType) {
                         case 0:
-                            isLostArrayAndAddAnddiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, count, jsonCompareResultsList);
+                            isLostArrayAndAddAnddiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, count, jsonCompareResultsList, ignoreFields);
                             break;
                         case 1:
-                            textDiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, jsonCompareResultsList);
+                            textDiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, jsonCompareResultsList, ignoreFields);
                             break;
                         default:
-                            isLostArrayAndAddAnddiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, count, jsonCompareResultsList);
+                            isLostArrayAndAddAnddiffJsonSchema(jsonKeyDiffResult, baseJson, compareJson, count, jsonCompareResultsList, ignoreFields);
 
                     }
                 }
@@ -244,8 +267,13 @@ public class DiffServiceImpl implements AgentDiffService {
     /**
      * 文本比对
      */
-    private void textDiffJsonSchema(JsonKeyDiffResult jsonKeyDiffResult, String baseJson, String compareJson, List<HashMap> jsonCompareResultsList) {
-        TextDiffResult textDiffResult = TextDiffUtils.stringDiff(baseJson, compareJson);
+    private void textDiffJsonSchema(JsonKeyDiffResult jsonKeyDiffResult, String baseJson, String compareJson, List<HashMap> jsonCompareResultsList, Set<String> ignoreFields) {
+        TextDiffResult textDiffResult;
+        if (ignoreFields != null && !ignoreFields.isEmpty()) {
+            textDiffResult = TextDiffUtils.stringDiff(baseJson, compareJson, ignoreFields);
+        } else {
+            textDiffResult = TextDiffUtils.stringDiff(baseJson, compareJson);
+        }
         jsonKeyDiffResult.setEqual(textDiffResult.isEqual());
         jsonKeyDiffResult.setTotalMsgCount(textDiffResult.getTotalMsgCount());
         jsonKeyDiffResult.setDiffMsgCount(textDiffResult.getDiffMsgCount());
@@ -253,18 +281,34 @@ public class DiffServiceImpl implements AgentDiffService {
 
     /**
      * 允许丢失和新加数组，默认diff json 结构
+     * ignoreFields: 忽略比对的字段集合（按字段名，任意层级），这些字段的值不一致不影响比对结果
      */
-    private void isLostArrayAndAddAnddiffJsonSchema(JsonKeyDiffResult jsonKeyDiffResult, String baseJson, String compareJson, Integer count, List<HashMap> jsonCompareResultsList) {
+    private void isLostArrayAndAddAnddiffJsonSchema(JsonKeyDiffResult jsonKeyDiffResult, String baseJson, String compareJson, Integer count, List<HashMap> jsonCompareResultsList, Set<String> ignoreFields) {
 
         try {
-            JSONCompareResult jsonCompareResult = new JSONCompareResult();
-            jsonCompareResult = JSONKeyCompare.compareJSON_FFTTF(baseJson, compareJson);
+            // 配置了忽略字段时，比对前先递归移除这些字段，再做标准值比对
+            // （json-compare-tool 的 IgnoreFieldHandler 要求完整 JSONPath 精确匹配，填字段名不会生效，故改用前置剥离）
+            if (ignoreFields != null && !ignoreFields.isEmpty()) {
+                baseJson = stripIgnoreFields(baseJson, ignoreFields);
+                compareJson = stripIgnoreFields(compareJson, ignoreFields);
+            }
+            // compareJSON_FFTTF 内部硬编码 setDiffValue(false)，会禁用值比对（只比对 key 结构），
+            // 导致非忽略字段值不一致也判通过。这里直接构造 JSONDiffObject 并开启值比对。
+            JSONDiffObject diffObject = new JSONDiffObject(baseJson, compareJson, JSONDiffKeyMode.CURRENCY_FFTTF);
+            diffObject.setDiffValue(true);
+            JSONCompareResult jsonCompareResult = diffObject.startCompare();
             HashMap<Integer, JSONCompareResult> comparJSONMap = new HashMap<Integer, JSONCompareResult>();
             comparJSONMap.put(count, jsonCompareResult);
             jsonCompareResultsList.add(comparJSONMap);
             log.error("jsonCompareResult = " + jsonCompareResult);
-            if (jsonCompareResult.isSuccess()) {
-                jsonKeyDiffResult.setEqual(jsonCompareResult.isSuccess());
+            // 库的结构比对 + 值比对结果
+            boolean libSuccess = jsonCompareResult.isSuccess();
+            // 额外执行一次独立的深度值比对，确保非忽略字段的值不一致一定被检出（不依赖库的 isDiffValue 行为）
+            boolean valueEqual = deepValueEquals(baseJson, compareJson);
+            boolean finalSuccess = libSuccess && valueEqual;
+            log.info("diff比对结果 libSuccess={}, valueEqual={}, finalSuccess={}", libSuccess, valueEqual, finalSuccess);
+            if (finalSuccess) {
+                jsonKeyDiffResult.setEqual(true);
                 jsonKeyDiffResult.setTotalMsgCount(1);
                 jsonKeyDiffResult.setDiffMsgCount(0);
             } else {
@@ -278,6 +322,74 @@ public class DiffServiceImpl implements AgentDiffService {
             jsonKeyDiffResult.setDiffMsgCount(1);
             log.error("e =" + e + "比对错误，请检查JSON，base=" + baseJson + "compareJson=" + compareJson);
         }
+    }
+
+    /**
+     * 递归移除 JSON 中指定的忽略字段（按字段名匹配，任意层级）。
+     * 使用 jayway JSONPath 的 $..fieldName 递归删除。
+     */
+    private String stripIgnoreFields(String json, Set<String> ignoreFields) {
+        if (json == null || ignoreFields == null || ignoreFields.isEmpty()) {
+            return json;
+        }
+        try {
+            Object document = Configuration.defaultConfiguration().jsonProvider().parse(json);
+            for (String field : ignoreFields) {
+                if (field == null) continue;
+                String trimmed = field.trim();
+                if (trimmed.isEmpty()) continue;
+                JsonPath.parse(document).delete("$.." + trimmed);
+            }
+            return JSON.toJSONString(document);
+        } catch (Exception e) {
+            log.warn("移除忽略字段失败，跳过忽略处理: {}", e.getMessage());
+            return json;
+        }
+    }
+
+    /**
+     * 独立的深度值比对：递归比较两个 JSON 字符串的结构与值，确保非忽略字段的值不一致能被检出。
+     * 与 json-compare-tool 库并行使用，作为值比对的权威判定。
+     */
+    private boolean deepValueEquals(String baseJson, String compareJson) {
+        if (baseJson == null && compareJson == null) return true;
+        if (baseJson == null || compareJson == null) return false;
+        try {
+            Object baseObj = JSON.parse(baseJson);
+            Object compareObj = JSON.parse(compareJson);
+            return deepEquals(baseObj, compareObj);
+        } catch (Exception e) {
+            log.warn("深度值比对解析失败，回退为字符串相等比较: {}", e.getMessage());
+            return baseJson.equals(compareJson);
+        }
+    }
+
+    private boolean deepEquals(Object expected, Object actual) {
+        if (expected == null && actual == null) return true;
+        if (expected == null || actual == null) return false;
+        // JSONObject 比较
+        if (expected instanceof JSONObject && actual instanceof JSONObject) {
+            JSONObject exp = (JSONObject) expected;
+            JSONObject act = (JSONObject) actual;
+            if (exp.size() != act.size()) return false;
+            for (String key : exp.keySet()) {
+                if (!act.containsKey(key)) return false;
+                if (!deepEquals(exp.get(key), act.get(key))) return false;
+            }
+            return true;
+        }
+        // JSONArray 比较（顺序敏感；如需忽略顺序可在此改为集合比较）
+        if (expected instanceof JSONArray && actual instanceof JSONArray) {
+            JSONArray exp = (JSONArray) expected;
+            JSONArray act = (JSONArray) actual;
+            if (exp.size() != act.size()) return false;
+            for (int i = 0; i < exp.size(); i++) {
+                if (!deepEquals(exp.get(i), act.get(i))) return false;
+            }
+            return true;
+        }
+        // 基本类型/字符串比较
+        return expected.equals(actual);
     }
 
 
@@ -409,13 +521,16 @@ public class DiffServiceImpl implements AgentDiffService {
 
         HashMap<Integer, Integer> taskApiResponseIsJsonMap = new HashMap<>();
         HashMap<Integer, String> taskApiNameMap = new HashMap<>();
+        HashMap<Integer, String> apiIgnoreFieldsMap = new HashMap<>();
         List<ApiInfo> requestIdApiList = diffMapper.getApiInfoById(recordId);
         for (ApiInfo apiInfo : requestIdApiList) {
             taskApiResponseIsJsonMap.put(apiInfo.getApiId(), apiInfo.getResponseIsJson());
             taskApiNameMap.put(apiInfo.getApiId(), apiInfo.getName());
+            apiIgnoreFieldsMap.put(apiInfo.getApiId(), apiInfo.getIgnoreFields());
         }
         diffMode.setTaskApiRespnseIsJsonMap(taskApiResponseIsJsonMap);
         diffMode.setTaskApiNameMap(taskApiNameMap);
+        diffMode.setApiIgnoreFieldsMap(apiIgnoreFieldsMap);
         return diffMode;
     }
 

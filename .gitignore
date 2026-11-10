@@ -8,3 +8,17 @@ target/
 .classpath
 .settings/
 .DS_Store
+
+# Node
+node_modules/
+conan-ui/node_modules/
+conan-ui/dist/
+
+# Build output
+out/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db

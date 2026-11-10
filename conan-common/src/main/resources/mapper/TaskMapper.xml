@@ -39,6 +39,7 @@
         <if test="isDemo != null "> and t.is_demo = #{isDemo}</if>
         <if test="isForceLock != null "> and t.is_force_lock = #{isForceLock}</if>
         ${params.dataScope}
+        order by t.update_time desc, t.create_time desc
     </select>
 
     <select id="selectTaskById" parameterType="Integer" resultMap="TaskResult">

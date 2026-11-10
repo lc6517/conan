@@ -49,7 +49,7 @@ public class ReplayController extends ConanBaseController {
     @PreAuthorize("@ss.hasPermi('admin:execution:replay')")
     @PostMapping("")
     public ApiResponse<Object> startReplay(@RequestParam(value = "task_execution_id") Integer taskExecutionId, @RequestParam(value = "replay_env") String replayEnv, @RequestParam(value = "replay_type") Integer replayType) {
-        log.info("ReplayController#startReplay");
+        log.info("ReplayController#startReplay"+ replayEnv);
         Result<Object> result = replayService.startReplay(taskExecutionId, replayEnv, replayType);
         return new ApiResponse<>(result);
     }
@@ -65,10 +65,10 @@ public class ReplayController extends ConanBaseController {
     }
 
     @ApiOperation(value = "根据回放ID获取最新比对ID", notes = "根据回放ID获取最新比对ID")
-    @ApiImplicitParam(name = "replayId", value = "replayId", dataType = "int", paramType = "query")
+    @ApiImplicitParam(name = "replay_id", value = "回放ID", dataType = "int", paramType = "query")
     @GetMapping(value = "/getDiffIdByReplayId")
-    public ApiResponse<Integer> findDiffIdByReplayId(@RequestParam(value = "replayId") Integer replayId) {
-        log.info("replayId:" + replayId);
+    public ApiResponse<Integer> findDiffIdByReplayId(@RequestParam(value = "replay_id") Integer replayId) {
+        log.info("replay_id:" + replayId);
         Integer diffId = replayService.findDiffIdByReplayId(replayId);
         return new ApiResponse(new Result<>(ResponseCode.SUCCESS, diffId));
     }
@@ -116,10 +116,10 @@ public class ReplayController extends ConanBaseController {
 
     @ApiOperation(value = "设置某次回放记录作为比对基准", notes = "设置某次回放记录作为比对基准")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "replayId", value = "回放ID", dataType = "int", paramType = "query")})
+            @ApiImplicitParam(name = "replay_id", value = "回放ID", dataType = "int", paramType = "query")})
     @GetMapping(value = "/setBaseLine")
     public ApiResponse<String> setReplayAsBaseLine(
-            @RequestParam(value = "replayId") Integer replayId) {
+            @RequestParam(value = "replay_id") Integer replayId) {
         log.info("ReplayController#setReplayAsBaseLine:replay_id=" + replayId);
         Result<String> result = replayService.setBaseLine(replayId);
         return new ApiResponse<>(result);

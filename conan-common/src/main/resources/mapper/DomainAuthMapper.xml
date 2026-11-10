@@ -27,6 +27,7 @@
             <if test="domainId != null "> and domain_id = #{domainId}</if>
             <if test="cookie != null  and cookie != ''"> and cookie = #{cookie}</if>
         </where>
+        order by update_time desc
     </select>
 
     <select id="selectDomainAuthById" parameterType="Integer" resultMap="DomainAuthResult">

@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <!-- 基本信息 -->
-    <description>Conan project for Spring Boot</description>
+    <description>for Spring Boot</description>
     <modelVersion>4.0.0</modelVersion>
     <name>conan-OR</name>
     <packaging>pom</packaging>
@@ -215,28 +215,28 @@
                 <version>${quartz.version}</version>
             </dependency>
 
-            <!-- 柯南公共工具 -->
+            <!-- 公共工具 -->
             <dependency>
                 <groupId>com.tal.wangxiao</groupId>
                 <artifactId>conan-common</artifactId>
                 <version>${conan.version}</version>
             </dependency>
 
-            <!-- 柯南admin系统模块 -->
+            <!-- admin系统模块 -->
             <dependency>
                 <groupId>com.tal.wangxiao</groupId>
                 <artifactId>conan-admin</artifactId>
                 <version>${conan.version}</version>
             </dependency>
 
-            <!-- 柯南agent核心模块 -->
+            <!-- agent核心模块 -->
             <dependency>
                 <groupId>com.tal.wangxiao</groupId>
                 <artifactId>conan-agent</artifactId>
                 <version>${conan.version}</version>
             </dependency>
 
-            <!-- 柯南system-framwork模块 -->
+            <!-- system-framwork模块 -->
             <dependency>
                 <groupId>com.tal.wangxiao</groupId>
                 <artifactId>conan-sys-api</artifactId>

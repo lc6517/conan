@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <pre @click="clickDom($event)" v-html="syntaxHighlight(jsonString)"></pre>
 </template>
 
@@ -107,22 +107,22 @@ export default {
     font-weight: 800;
   }
 }
-/deep/.string {
+::v-deep .string {
   color: #3ab54a;
 }
-/deep/.number {
+::v-deep .number {
   color: #25aae2;
 }
-/deep/.boolean {
+::v-deep .boolean {
   color: #f98280;
 }
-/deep/.null {
+::v-deep .null {
   color: #f1592a;
 }
-/deep/.key {
+::v-deep .key {
   color: #92278f;
 }
-/deep/.open {
+::v-deep .open {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -131,7 +131,7 @@ export default {
   vertical-align: middle;
   cursor: pointer;
 }
-/deep/.close {
+::v-deep .close {
   display: inline-block;
   width: 12px;
   height: 12px;

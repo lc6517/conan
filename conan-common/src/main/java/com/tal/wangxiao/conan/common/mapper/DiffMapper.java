@@ -98,9 +98,17 @@ public interface DiffMapper {
      * @param recordId
      * get recordId api list Id
      * */
-    @Select(" SELECT  api.response_is_json ,api.api_id ,api.name as name from bss_api api \n" +
+    @Select(" SELECT  api.response_is_json ,api.api_id ,api.name as name ,api.ignore_fields as ignore_fields from bss_api api \n" +
             "LEFT JOIN bss_record_result rs on rs.api_id = api.api_id WHERE rs.record_id = #{recordId}")
     public List<ApiInfo> getApiInfoById(Integer recordId);
+
+    /**
+     * 实时查询单个接口的忽略比对字段
+     * @param apiId 接口ID
+     * @return ignore_fields 字段值
+     */
+    @Select("SELECT ignore_fields FROM bss_api WHERE api_id = #{apiId}")
+    public String getIgnoreFieldsByApiId(@Param("apiId") Integer apiId);
 
 
     /**

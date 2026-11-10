@@ -36,6 +36,7 @@
             <if test="updateTime != null "> and update_time = #{updateTime}</if>
             <if test="updateBy != null "> and update_by = #{updateBy}</if>
         </where>
+        order by create_time desc
     </select>
 
     <select id="selectTestUserById" parameterType="Integer" resultMap="TestUserResult">

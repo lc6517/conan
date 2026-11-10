@@ -31,6 +31,7 @@
             <if test="successRate != null  and successRate != ''"> and success_rate = #{successRate}</if>
             <if test="diffErrorMsg != null  and diffErrorMsg != ''"> and diff_error_msg = #{diffErrorMsg}</if>
         </where>
+        order by create_time desc
     </select>
 
     <select id="selectDiffById" parameterType="Integer" resultMap="DiffResult">

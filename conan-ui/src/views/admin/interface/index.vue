@@ -217,6 +217,13 @@
       >
       </el-table-column>
       <el-table-column
+        label="忽略字段"
+        align="center"
+        prop="ignoreFields"
+        show-overflow-tooltip
+      >
+      </el-table-column>
+      <el-table-column
         label="操作"
         align="center"
         class-name="small-padding fixed-width"
@@ -356,6 +363,13 @@
             class="w100"
           />
         </el-form-item>
+        <el-form-item label="忽略字段" prop="ignoreFields">
+          <el-input
+            v-model="form.ignoreFields"
+            placeholder="忽略比对的字段，多个用英文逗号分隔，如 timestamp,requestId"
+            class="w100"
+          />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -447,7 +461,8 @@ export default {
         isOnline: null,
         isRead: null,
         isEnable: null,
-        recordableCount: null
+        recordableCount: null,
+        ignoreFields: null
       },
       total: 0,
       // 表单参数
@@ -597,6 +612,7 @@ export default {
         isRead: null,
         isEnable: null,
         recordableCount: null,
+        ignoreFields: null,
         createTime: null,
         createBy: null,
         updateTime: null,

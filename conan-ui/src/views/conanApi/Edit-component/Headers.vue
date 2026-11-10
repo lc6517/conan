@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="postman">
     <!-- 请求参数设置 -->
     <div class="postman-params">
@@ -262,17 +262,17 @@ export default {
     }
   }
 
-  /deep/.el-table td,
-  /deep/.el-table th {
+  ::v-deep .el-table td,
+  ::v-deep .el-table th {
     padding: 5px 0 !important;
   }
-  /deep/.el-table th > .cell,
-  /deep/.el-table .cell {
+  ::v-deep .el-table th > .cell,
+  ::v-deep .el-table .cell {
     line-height: 28px;
     padding: 0 5px;
   }
 
-  .table /deep/.el-input__inner {
+  .table ::v-deep .el-input__inner {
     height: 28px;
   }
 }

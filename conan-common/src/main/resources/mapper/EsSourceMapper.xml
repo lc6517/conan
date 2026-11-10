@@ -24,6 +24,7 @@
             <if test="esIp != null  and esIp != ''"> and es_ip = #{esIp}</if>
             <if test="esPort != null "> and es_port = #{esPort}</if>
         </where>
+        order by es_source_id desc
     </select>
 
     <select id="selectEsSourceById" parameterType="Integer" resultMap="EsSourceResult">

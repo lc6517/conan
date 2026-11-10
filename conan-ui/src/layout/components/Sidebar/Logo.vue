@@ -36,7 +36,7 @@ export default {
   },
   data() {
     return {
-      title: '柯南流量回放平台',
+      title: '流量回放平台',
     }
   }
 }

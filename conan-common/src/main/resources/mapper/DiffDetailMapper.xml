@@ -25,6 +25,7 @@
             <if test="diffId != null "> and diff_id = #{diffId}</if>
             <if test="expectCount != null "> and expect_count = #{expectCount}</if>
         </where>
+        order by diff_detail_id desc
     </select>
 
     <select id="selectDiffDetailById" parameterType="Integer" resultMap="DiffDetailResult">

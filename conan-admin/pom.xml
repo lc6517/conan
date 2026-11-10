@@ -13,7 +13,7 @@
     <artifactId>conan-admin</artifactId>
 
     <name>conan-admin</name>
-    <description>柯南admin管理模块</description>
+    <description>admin管理模块</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,18 +27,21 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+<!--            <version>3.1.8</version>-->
         </dependency>
 
         <!-- SpringBoot集成thymeleaf模板 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
+<!--            <version>3.1.8</version>-->
         </dependency>
 
         <!-- spring-boot-devtools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
+<!--            <version>3.1.8</version>-->
             <optional>true</optional> <!-- 表示依赖不会传递 -->
         </dependency>
 
@@ -65,7 +68,7 @@
             <artifactId>conan-utils</artifactId>
         </dependency>
 
-        <!-- 柯南system-framwork模块 -->
+        <!-- system-framwork模块 -->
         <dependency>
             <groupId>com.tal.wangxiao</groupId>
             <artifactId>conan-sys-api</artifactId>
@@ -121,6 +124,8 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.7.0</version>
+
                 <executions>
                     <execution>
                         <id>attach-sources</id>

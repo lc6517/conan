@@ -1,16 +1,16 @@
-.dataList {
+﻿.dataList {
   &-moreFlex {
-    /deep/.el-form {
+    ::v-deep .el-form {
       .el-form-item--small.el-form-item {
       width: 22%!important;
       }
-      /deep/.el-form-item__content {
+      ::v-deep .el-form-item__content {
         text-align: center;
       }
     }
   }
   &-From {
-    /deep/.el-form {
+    ::v-deep .el-form {
       display: flex;
       white-space: nowrap;
       flex-flow: wrap;
@@ -19,7 +19,7 @@
       .el-form-item--small.el-form-item {
         width: 29%;
       }
-      /deep/.el-form-item__content {
+      ::v-deep .el-form-item__content {
         padding-right: 20px;
         width: 100%;
       }
@@ -35,19 +35,19 @@
     margin-bottom: 10px;
   }
   &-Table {
-    /deep/.task-table-expand {
+    ::v-deep .task-table-expand {
       font-size: 0;
     }
-    /deep/ .el-form-item__label {
+    ::v-deep  .el-form-item__label {
       width: 130px;
       color: #99a9bf !important;
     }
-    /deep/.task-table-expand .el-form-item {
+    ::v-deep .task-table-expand .el-form-item {
       margin-right: 0;
       margin-bottom: 0;
       width: 50%;
     }
-    /deep/.el-dropdown{
+    ::v-deep .el-dropdown{
       margin-right: 10px;
     }
   }

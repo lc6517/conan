@@ -69,8 +69,11 @@ public class RuleCheckoutService {
         if (!JsonCheckUtils.isJSONValidByalibaba(response)) {
             log.error("aresponse 不是JSON piId = {0}， response= {1}" , apiId, response);
             ApiInfo apiInfo = apiService.selectApiById(apiId);
+            System.out.println("走到apiInfo"+ apiInfo);
             //当要求的api response 本来就可以是非json， 不进行Schema验证
             if (apiInfo.getResponseIsJson() == 1) {
+                System.out.println("判断返回值是否为json"+ apiInfo.getResponseIsJson());
+
                 jsonSchemaResult.setIsSuccess(true);
                 return;
             } else {
@@ -86,7 +89,11 @@ public class RuleCheckoutService {
     private void schemaHandler(Integer apiId, Integer replayId, String header, String requstBody, String response, JSONSchemaResult jsonSchemaResult) throws CustomException {
         ApiRule apiRule = new ApiRule();
         apiRule.setApiId(apiId);
+        System.out.println("走到schemaHandler分支，apiId="+ apiId);
+
         List<ApiRule> apiRuleList = apiRuleService.selectApiRuleList(apiRule);
+        System.out.println("走到schemaHandler分支，apiRuleList="+ apiRuleList);
+
         if (StringHandlerUtils.isNull(apiRuleList)) {
             redisTemplateTool.setLogByRecordId_ERROR(replayId, "该ApiId数据库没有发现，请检查数据库信息apiId =" + apiId);
             throw new CustomException("该ApiId数据库没有发现，请检查数据库信息apiId =" + apiId);
@@ -94,6 +101,8 @@ public class RuleCheckoutService {
         //api没有配置验证JSON,走产品线验证流程
         if (StringHandlerUtils.isNull(apiRuleList)) {
             jsonSchemaResult = productLineRuleChecke(apiId, replayId, response);
+            System.out.println("走到productLineRuleChecke分支，apiRuleList="+ apiId + replayId + response);
+
             if (jsonSchemaResult.getIsSuccess()) {
                 //验证成功不入库
                 return;
@@ -107,6 +116,8 @@ public class RuleCheckoutService {
         StringBuffer stringBuffer = new StringBuffer();
         for (ApiRule apiRuleDb : apiRuleList) {
             jsonSchemaResult = JSONSchemaUtils.verifyJsonSchemaByString(apiRuleDb.getRuleJson(), response);
+            System.out.println("走到verifyJsonSchemaByString分支，apiRuleList=" + apiRuleDb.getRuleJson() + response);
+
             if (jsonSchemaResult.getIsSuccess()) {
                 //验证成功不入库
                 return;
@@ -126,6 +137,8 @@ public class RuleCheckoutService {
         List<DeptJsonRule> deptJsonRuleList = replaySchemaErrorMapper.getRuleByDeptId(replayId);
         JSONSchemaResult jsonSchemaResult = new JSONSchemaResult();
         jsonSchemaResult.setIsSuccess(true);
+        System.out.println("走到JSONSchemaResult分支，apiRuleList=" + apiId + deptJsonRuleList);
+
         if (StringHandlerUtils.isNull(deptJsonRuleList)) {
             log.debug("该产品线没有配置产品线规则校验");
             throw new CustomException("该产品线没有配置产品线规则校验");

@@ -229,6 +229,9 @@ public class DiffServiceImpl implements DiffService {
         apiDiffDetailInfo.setDomainName(apiInfo.getDomainName());
         apiDiffDetailInfo.setApiName(apiInfo.getName());
 
+        int passCount = 0;
+        int totalCount = 0;
+
         for (String requestId : apiRequestIdSet) {
             boolean flag = false;
             DiffApiLogInfo apiLogInfo = new DiffApiLogInfo();
@@ -270,6 +273,13 @@ public class DiffServiceImpl implements DiffService {
             if (null == diffResultInRedis) {
                 continue;
             }
+            totalCount++;
+            // 比对结果（已应用忽略字段规则）
+            apiLogInfo.setIsDiffResult(diffResultInRedis.isDiffResult());
+            apiLogInfo.setDiffResultMsg(diffResultInRedis.getDiffMsg());
+            if (diffResultInRedis.isDiffResult()) {
+                passCount++;
+            }
             apiLogInfo.setRequestId(requestId);
             // apiLogInfo.setCompareData(compareData);
             try {
@@ -296,6 +306,17 @@ public class DiffServiceImpl implements DiffService {
             apiDiffDetailInfo.getDiffApiLogInfoList().add(apiLogInfo);
 
         }
+        // 计算成功率：通过条数 / 总条数 * 100
+        if (totalCount > 0) {
+            double rate = (double) passCount * 100.0 / totalCount;
+            apiDiffDetailInfo.setSuccessRate(String.format("%.1f", rate));
+        } else {
+            apiDiffDetailInfo.setSuccessRate("0.0");
+        }
+        apiDiffDetailInfo.setPassCount(passCount);
+        apiDiffDetailInfo.setTotalCount(totalCount);
+        log.info("单接口比对结果 apiId={}, totalCount={}, passCount={}, successRate={}",
+                apiId, totalCount, passCount, apiDiffDetailInfo.getSuccessRate());
         return ApiResponse.success("获取diff 详细信息成功", apiDiffDetailInfo);//.success("", resultMap);
     }
 

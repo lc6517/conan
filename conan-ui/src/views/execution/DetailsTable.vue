@@ -95,7 +95,7 @@ export default {
     // 设为基准
     setAsBaseLine(replay_id) {
       let obj = {
-        replayId: replay_id,
+        replay_id: replay_id,
       };
       setBaseLineByTaskExecutionID(obj)
         .then((res) => {
@@ -139,7 +139,7 @@ export default {
     getDiffList(row) {
       console.log(row, 'diff');
       let obj = {
-        replayId: row.id,
+        replay_id: row.id,
       };
       getDiffIdByReplayId(obj).then((res) => {
         console.log(res);

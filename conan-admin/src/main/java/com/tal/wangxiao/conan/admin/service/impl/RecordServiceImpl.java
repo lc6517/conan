@@ -211,7 +211,7 @@ public class RecordServiceImpl implements RecordService{
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(shouldQuery);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        log.info(queryBuilder.toString());
+        log.info("queryBuilder= " + queryBuilder.toString());
         sourceBuilder.query(queryBuilder);
         sourceBuilder.sort("@timestamp", SortOrder.DESC);
         sourceBuilder.size(500);
@@ -224,6 +224,11 @@ public class RecordServiceImpl implements RecordService{
         long totalElements = 0;
         try {
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            log.info("searchResponse" + searchResponse);
+            log.info("searchRequest" + searchRequest);
+            log.info("RequestOptions.DEFAULT" + RequestOptions.DEFAULT);
+
+
         } catch (Exception e) {
             log.error("日志查询失败" + e);
         }

@@ -126,6 +126,9 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="线上域名" align="center" prop="onlineDomain" show-overflow-tooltip />
+      <el-table-column label="灰度域名" align="center" prop="grayDomain" show-overflow-tooltip />
+      <el-table-column label="测试域名" align="center" prop="testDomain" show-overflow-tooltip />
       <el-table-column label="ES数据源相关配置" align="center" prop="">
         <template slot-scope="scope">
            <router-link
@@ -254,6 +257,16 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-divider content-position="left">环境域名配置</el-divider>
+        <el-form-item label="线上域名" prop="onlineDomain">
+          <el-input v-model="form.onlineDomain" placeholder="线上环境域名，如 api.example.com" />
+        </el-form-item>
+        <el-form-item label="灰度域名" prop="grayDomain">
+          <el-input v-model="form.grayDomain" placeholder="灰度环境域名，如 gray-api.example.com" />
+        </el-form-item>
+        <el-form-item label="测试域名" prop="testDomain">
+          <el-input v-model="form.testDomain" placeholder="测试环境域名，如 test-api.example.com" />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -317,6 +330,9 @@ export default {
         name: null,
         online: null,
         isAuth: null,
+        onlineDomain: null,
+        grayDomain: null,
+        testDomain: null,
         createBy: "",
       },
       // 表单校验
@@ -394,6 +410,9 @@ export default {
         updateTime: null,
         updateBy: null,
         isAuth: null,
+        onlineDomain: null,
+        grayDomain: null,
+        testDomain: null,
       };
       this.resetForm("form");
     },

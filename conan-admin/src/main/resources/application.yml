@@ -17,6 +17,8 @@ conan:
 # Spring Datasource Settings
 # Spring Datasource Settings
 spring:
+  profiles:
+    active: dev
   # 资源信息
   messages:
     # 国际化资源文件路径
@@ -51,8 +53,8 @@ spring:
       master:
         enabled: true
         url: jdbc:mysql://127.0.0.1:3306/conandb?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&serverTimezone=Asia/Shanghai
-        username: 
-        password: 
+        username: myuser
+        password: 123456
       # 从库数据源
       slave:
         # 从数据源开关/默认关闭
@@ -198,3 +200,6 @@ pagehelper:
 security:
   basic:
     enabled: false
+
+system:
+  env: TEST

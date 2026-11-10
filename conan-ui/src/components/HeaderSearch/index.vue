@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div :class="{'show':show}" class="header-search">
     <svg-icon class-name="search-icon" icon-class="search" @click.stop="click" />
     <el-select
@@ -167,7 +167,7 @@ export default {
     display: inline-block;
     vertical-align: middle;
 
-    /deep/ .el-input__inner {
+    ::v-deep  .el-input__inner {
       border-radius: 0;
       border: 0;
       padding-left: 0;

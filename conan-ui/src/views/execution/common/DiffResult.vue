@@ -12,7 +12,7 @@
       </el-card>
       <el-card shadow="hover" class="felxBox">
         <span class="felxName">成功率</span>
-        <span class="flexResult">{{ successRate }}</span>
+        <span class="flexResult" :style="{ color: successRateColor }">{{ successRate }}% ({{ passCount }}/{{ totalCount }})</span>
       </el-card>
     </div>
     <div class="mergely-conan">
@@ -33,6 +33,9 @@ export default {
       loading: false,
       apiName: '',
       successRate: '',
+      successRateColor: '#67c23a',
+      passCount: 0,
+      totalCount: 0,
       domain: '',
       queryParams: {
         diffId: null,
@@ -42,9 +45,6 @@ export default {
   },
 
   created() {
-    this.successRate = this.$route.query.successRate
-      ? this.$route.query.successRate
-      : 0;
     this.queryParams.diffId = this.$route.query.diffId;
     this.queryParams.apiId = this.$route.query.apiId;
   },
@@ -60,26 +60,37 @@ export default {
         let comparedata = '';
         this.apiName = res.data.apiName;
         this.domain = res.data.domainName;
+        // 成功率、通过数、总数从接口返回取（已应用忽略字段规则）
+        this.successRate = res.data.successRate ? res.data.successRate : '0.0';
+        this.passCount = res.data.passCount ? res.data.passCount : 0;
+        this.totalCount = res.data.totalCount ? res.data.totalCount : 0;
+        const rateNum = parseFloat(this.successRate);
+        this.successRateColor = rateNum >= 100 ? '#67c23a' : rateNum >= 80 ? '#e6a23c' : '#f56c6c';
+
         for (let i = 0; i < res.data.diffApiLogInfoList.length; i++) {
           let number = i + 1;
+          const item = res.data.diffApiLogInfoList[i];
+          const passBadge = item.isDiffResult ? '✅ 通过' : '❌ 不通过';
           try {
             basedata =
               basedata +
               '\n' +
               '-----------------------流量' +
               number +
+              '  ' +
+              passBadge +
               '---------------------' +
               '\n' +
               '\n' +
               'RequestBody:' +
               '\n' +
-              res.data.diffApiLogInfoList[i].requestBody +
+              item.requestBody +
               '\n' +
               '\n' +
               'Response:' +
               '\n' +
               JSON.stringify(
-                JSON.parse(res.data.diffApiLogInfoList[i].baseData),
+                JSON.parse(item.baseData),
                 null,
                 2
               );
@@ -88,39 +99,43 @@ export default {
               '\n' +
               '-----------------------流量' +
               number +
+              '  ' +
+              passBadge +
               '---------------------' +
               '\n' +
               '\n' +
               'RequestBody:' +
               '\n' +
-              res.data.diffApiLogInfoList[i].requestBody +
+              item.requestBody +
               '\n' +
               '\n' +
               'Response:' +
               '\n' +
               JSON.stringify(
-                JSON.parse(res.data.diffApiLogInfoList[i].compareData),
+                JSON.parse(item.compareData),
                 null,
                 2
               );
           } catch (e) {
-            if (res.data.diffApiLogInfoList[i].baseData.length > 200) {
+            if (item.baseData.length > 200) {
               basedata =
                 basedata +
                 '\n' +
                 '-----------------------流量' +
                 number +
+                '  ' +
+                passBadge +
                 '---------------------' +
                 '\n' +
                 '\n' +
                 'RequestBody:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].requestBody +
+                item.requestBody +
                 '\n' +
                 '\n' +
                 'Response:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].baseData.substring(0, 200) +
+                item.baseData.substring(0, 200) +
                 '流量过长已忽略';
             } else {
               basedata =
@@ -128,35 +143,39 @@ export default {
                 '\n' +
                 '-----------------------流量' +
                 number +
+                '  ' +
+                passBadge +
                 '---------------------' +
                 '\n' +
                 '\n' +
                 'RequestBody:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].requestBody +
+                item.requestBody +
                 '\n' +
                 '\n' +
                 'Response:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].baseData;
+                item.baseData;
             }
-            if (res.data.diffApiLogInfoList[i].compareData.length > 200) {
+            if (item.compareData.length > 200) {
               comparedata =
                 comparedata +
                 '\n' +
                 '-----------------------流量' +
                 number +
+                '  ' +
+                passBadge +
                 '---------------------' +
                 '\n' +
                 '\n' +
                 'RequestBody:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].requestBody +
+                item.requestBody +
                 '\n' +
                 '\n' +
                 'Response:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].compareData.substring(0, 200) +
+                item.compareData.substring(0, 200) +
                 '流量过长已忽略';
             } else {
               comparedata =
@@ -164,17 +183,19 @@ export default {
                 '\n' +
                 '-----------------------流量' +
                 number +
+                '  ' +
+                passBadge +
                 '---------------------' +
                 '\n' +
                 '\n' +
                 'RequestBody:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].requestBody +
+                item.requestBody +
                 '\n' +
                 '\n' +
                 'Response:' +
                 '\n' +
-                res.data.diffApiLogInfoList[i].compareData;
+                item.compareData;
             }
           }
         }

@@ -41,4 +41,9 @@ public class DiffMode {
      * task 下所有API
      */
     HashMap<Integer, String> taskApiNameMap;
+
+    /**
+     * 接口级忽略比对字段，key=apiId, value=忽略字段字符串(逗号分隔)
+     */
+    HashMap<Integer, String> apiIgnoreFieldsMap;
 }

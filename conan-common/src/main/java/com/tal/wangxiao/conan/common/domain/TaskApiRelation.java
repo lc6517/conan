@@ -41,6 +41,11 @@ public class TaskApiRelation extends ConanBaseEntity
     @ApiModelProperty("比对类型")
     private Integer diffType;
 
+    /** 忽略比对的字段（逗号分隔，如 timestamp,id） */
+
+    @ApiModelProperty("忽略比对的字段（逗号分隔）")
+    private String ignoreFields;
+
     /** 执行顺序 */
 
     @ApiModelProperty("执行顺序")
@@ -90,6 +95,14 @@ public class TaskApiRelation extends ConanBaseEntity
         return diffType;
     }
 
+    public String getIgnoreFields() {
+        return ignoreFields;
+    }
+
+    public void setIgnoreFields(String ignoreFields) {
+        this.ignoreFields = ignoreFields;
+    }
+
     public Integer getPosition() {
         return position;
     }
@@ -106,6 +119,7 @@ public class TaskApiRelation extends ConanBaseEntity
                 .append("apiId", getApiId())
                 .append("recordCount", getRecordCount())
                 .append("diffType", getDiffType())
+                .append("ignoreFields", getIgnoreFields())
                 .append("position", getPosition())
                 .toString();
     }

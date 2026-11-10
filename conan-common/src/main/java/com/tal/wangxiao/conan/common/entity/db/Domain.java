@@ -33,4 +33,13 @@ public class Domain extends BaseEntity {
 
     @Column(name="es_source_id")
     private Integer esSourceId;
+
+    @Column(name = "online_domain")
+    private String onlineDomain;
+
+    @Column(name = "gray_domain")
+    private String grayDomain;
+
+    @Column(name = "test_domain")
+    private String testDomain;
 }

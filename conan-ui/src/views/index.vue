@@ -14,7 +14,7 @@
             <div class="user-info-cont">
               <div class="user-info-name">Hi {{ name }},Welcome back</div>
               <br />
-              <div>以下数据从2020/9/9开始统计</div>
+              <div>以下数据从2024/6/9开始统计</div>
             </div>
           </div>
           <div class="user-info-list">
@@ -26,19 +26,19 @@
             <span>北京</span>
           </div>
         </el-card>
-        <el-card shadow="hover" class="leftCont common">
-          <el-row>
-            <el-col :span="24">
-              <div class="grid-contents bg-purple-dark">
-                <i class="iconfont icon-renyuan grid-con-icon"></i>
-                <div class="grid-cont-right">
-                  <div>平台活跃用户数</div>
-                  <div class="grid-num">{{ homeData.user_count }}</div>
-                </div>
-              </div>
-            </el-col>
-          </el-row>
-        </el-card>
+<!--        <el-card shadow="hover" class="leftCont common">-->
+<!--          <el-row>-->
+<!--            <el-col :span="24">-->
+<!--              <div class="grid-contents bg-purple-dark">-->
+<!--                <i class="iconfont icon-renyuan grid-con-icon"></i>-->
+<!--                <div class="grid-cont-right">-->
+<!--                  <div>平台活跃用户数</div>-->
+<!--                  <div class="grid-num">{{ homeData.user_count }}</div>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </el-col>-->
+<!--          </el-row>-->
+<!--        </el-card>-->
         <el-card shadow="hover" class="common">
           <el-row>
             <el-col :span="24">
@@ -101,39 +101,39 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="18">
-            <el-card style="height:406px">
-              <div>
-                <div slot="header" class="clearfix">
-                  <span>核心监控数据 </span>
-                  <br />
-                  <small>Your can see important data for a week</small>
-                </div>
-                <div ref="detail2">
-                  <div ref="line" style="min-width:599px;"></div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :span="6" class="versionBox">
-            <div class="clearfix">
-              <span>当前版本V3.0</span>
-            </div>
-            <div class="box-body">
-              <p class="text-muted">
-                增加数据中心、开放中心模块，已和PTS压测平台打通提供线上真实压力模型与压测数据，实现全链路自动化压测，目前已在大班业务试运行
-              </p>
-              <p class="text-muted">
-                柯南流量回放平台是一个将线上环境真实流量复制并用于自动回归测试的平台，帮助大家提升测试质量，提高回归效率，并已经和发布系统联动来自动进行服务端的接口回归。如果有感兴趣的，可以联系质量研发部-刘劲松老师了解。
-              </p>
-              <a
-                href="http://app.xesv5.com/ep-docs/CONAN/"
-                target="_blank"
-                class="btn btn-sm btn-outline rounded b-success"
-                >阅读更多
-              </a>
-            </div>
-          </el-col>
+<!--          <el-col :span="18">-->
+<!--            <el-card style="height:406px">-->
+<!--              <div>-->
+<!--                <div slot="header" class="clearfix">-->
+<!--                  <span>核心监控数据 </span>-->
+<!--                  <br />-->
+<!--                  <small>Your can see important data for a week</small>-->
+<!--                </div>-->
+<!--                <div ref="detail2">-->
+<!--                  <div ref="line" style="min-width:599px;"></div>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </el-card>-->
+<!--          </el-col>-->
+<!--          <el-col :span="6" class="versionBox">-->
+<!--            <div class="clearfix">-->
+<!--              <span>当前版本V3.0</span>-->
+<!--            </div>-->
+<!--            <div class="box-body">-->
+<!--              <p class="text-muted">-->
+<!--                增加数据中心、开放中心模块，已和PTS压测平台打通提供线上真实压力模型与压测数据，实现全链路自动化压测，目前已在大班业务试运行-->
+<!--              </p>-->
+<!--              <p class="text-muted">-->
+<!--                流量回放平台是一个将线上环境真实流量复制并用于自动回归测试的平台，帮助大家提升测试质量，提高回归效率，并已经和发布系统联动来自动进行服务端的接口回归。如果有感兴趣的，可以联系质量研发部-刘劲松老师了解。-->
+<!--              </p>-->
+<!--              <a-->
+<!--                href="http://app.xesv5.com/ep-docs/CONAN/"-->
+<!--                target="_blank"-->
+<!--                class="btn btn-sm btn-outline rounded b-success"-->
+<!--                >阅读更多-->
+<!--              </a>-->
+<!--            </div>-->
+<!--          </el-col>-->
         </el-row>
       </el-col>
     </el-row>
@@ -164,77 +164,77 @@
         </el-card>
       </el-col>
     </el-row>
-    <el-row :gutter="20">
-      <el-col :span="16">
-        <el-card shadow="hover">
-          <div slot="header" class="clearfix">
-            <span>各部门监控数据 </span>
-            <br />
-            <small>Agent Machine for task replay</small>
-          </div>
-          <div ref="productLineData">
-            <div ref="productLineLine"></div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <div slot="header" class="clearfix">
-            <span
-              >留言板
-              <el-link
-                icon="el-icon-edit"
-                style="float: right"
-                @click="messageDialogVisible = true"
-                >留言</el-link
-              >
-            </span>
-            <br />
-            <small>欢迎留下你的意见</small>
-          </div>
-          <div class="box-body">
-            <div class="block" style="overflow-y: auto;height: 300px;">
-              <el-timeline>
-                <el-timeline-item
-                  v-for="(activity, index) in messages"
-                  :key="index"
-                  :timestamp="activity.timestamp"
-                  placement="top"
-                >
-                  <el-card>
-                    <h6 style="margin: 10px 1px; font-size: 16px;">
-                      {{ activity.content }}
-                    </h6>
-                    <p class="comment">{{ activity.comment }}</p>
-                  </el-card>
-                </el-timeline-item>
-              </el-timeline>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-dialog
-      title="发布留言"
-      :visible.sync="messageDialogVisible"
-      width="30%"
-      center
-    >
-      <el-input
-        type="textarea"
-        :rows="2"
-        maxlength="50"
-        minlength="5"
-        placeholder="请输入内容"
-        show-word-limit
-        v-model="msgContent"
-      >
-      </el-input>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="messageDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitMessage">确 定</el-button>
-      </span>
-    </el-dialog>
+<!--    <el-row :gutter="20">-->
+<!--      <el-col :span="16">-->
+<!--        <el-card shadow="hover">-->
+<!--          <div slot="header" class="clearfix">-->
+<!--            <span>各部门监控数据 </span>-->
+<!--            <br />-->
+<!--            <small>Agent Machine for task replay</small>-->
+<!--          </div>-->
+<!--          <div ref="productLineData">-->
+<!--            <div ref="productLineLine"></div>-->
+<!--          </div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
+<!--      <el-col :span="8">-->
+<!--        <el-card shadow="hover">-->
+<!--          <div slot="header" class="clearfix">-->
+<!--            <span-->
+<!--              >留言板-->
+<!--              <el-link-->
+<!--                icon="el-icon-edit"-->
+<!--                style="float: right"-->
+<!--                @click="messageDialogVisible = true"-->
+<!--                >留言</el-link-->
+<!--              >-->
+<!--            </span>-->
+<!--            <br />-->
+<!--            <small>欢迎留下你的意见</small>-->
+<!--          </div>-->
+<!--          <div class="box-body">-->
+<!--            <div class="block" style="overflow-y: auto;height: 300px;">-->
+<!--              <el-timeline>-->
+<!--                <el-timeline-item-->
+<!--                  v-for="(activity, index) in messages"-->
+<!--                  :key="index"-->
+<!--                  :timestamp="activity.timestamp"-->
+<!--                  placement="top"-->
+<!--                >-->
+<!--                  <el-card>-->
+<!--                    <h6 style="margin: 10px 1px; font-size: 16px;">-->
+<!--                      {{ activity.content }}-->
+<!--                    </h6>-->
+<!--                    <p class="comment">{{ activity.comment }}</p>-->
+<!--                  </el-card>-->
+<!--                </el-timeline-item>-->
+<!--              </el-timeline>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
+<!--    </el-row>-->
+<!--    <el-dialog-->
+<!--      title="发布留言"-->
+<!--      :visible.sync="messageDialogVisible"-->
+<!--      width="30%"-->
+<!--      center-->
+<!--    >-->
+<!--      <el-input-->
+<!--        type="textarea"-->
+<!--        :rows="2"-->
+<!--        maxlength="50"-->
+<!--        minlength="5"-->
+<!--        placeholder="请输入内容"-->
+<!--        show-word-limit-->
+<!--        v-model="msgContent"-->
+<!--      >-->
+<!--      </el-input>-->
+<!--      <span slot="footer" class="dialog-footer">-->
+<!--        <el-button @click="messageDialogVisible = false">取 消</el-button>-->
+<!--        <el-button type="primary" @click="submitMessage">确 定</el-button>-->
+<!--      </span>-->
+<!--    </el-dialog>-->
   </div>
 </template>
 

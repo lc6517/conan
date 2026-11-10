@@ -34,6 +34,7 @@
             <if test="replayEnv != null  and replayEnv != ''"> and replay_env = #{replayEnv}</if>
             <if test="replayType != null "> and replay_type = #{replayType}</if>
         </where>
+        order by start_at desc
     </select>
 
     <select id="selectReplayById" parameterType="Integer" resultMap="ReplayResult">

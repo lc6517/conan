@@ -46,7 +46,16 @@ public class DiffApiLogInfo {
     @ApiModelProperty("requestId")
     private String requestId;
 
+    /**
+     * 比对是否通过（忽略字段差异不算失败）
+     */
+    @ApiModelProperty("比对是否通过")
+    private Boolean isDiffResult;
 
-
+    /**
+     * 差异信息
+     */
+    @ApiModelProperty("差异详情")
+    private String diffResultMsg;
 
 }

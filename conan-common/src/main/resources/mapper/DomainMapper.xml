@@ -15,10 +15,13 @@
         <result property="isAuth"    column="is_auth"    />
         <result property="sysDeptId"    column="sys_dept_id"    />
         <result property="esSourceId"    column="es_source_id"    />
+        <result property="onlineDomain"    column="online_domain"    />
+        <result property="grayDomain"    column="gray_domain"    />
+        <result property="testDomain"    column="test_domain"    />
     </resultMap>
 
     <sql id="selectDomainVo">
-        select id, name, online, create_time, create_by, update_time, update_by, is_auth, sys_dept_id from bss_domain
+        select id, name, online, create_time, create_by, update_time, update_by, is_auth, sys_dept_id, es_source_id, online_domain, gray_domain, test_domain from bss_domain
     </sql>
 
     <select id="selectDomainList" parameterType="Domain" resultMap="DomainResult">
@@ -34,6 +37,7 @@
             <if test="esSourceId != null "> and es_source_id = #{esSourceId}</if>
         <!-- 数据范围过滤 -->
         ${params.dataScope}
+        order by dom.update_time desc, dom.create_time desc
     </select>
 
     <select id="selectEsSourceIdByDomainId" parameterType="int" resultType="int">
@@ -57,6 +61,9 @@
             <if test="isAuth != null">is_auth,</if>
             <if test="sysDeptId != null">sys_dept_id,</if>
             <if test="esSourceId != null">es_source_id,</if>
+            <if test="onlineDomain != null and onlineDomain != ''">online_domain,</if>
+            <if test="grayDomain != null and grayDomain != ''">gray_domain,</if>
+            <if test="testDomain != null and testDomain != ''">test_domain,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="name != null and name != ''">#{name},</if>
@@ -68,6 +75,9 @@
             <if test="isAuth != null">#{isAuth},</if>
             <if test="sysDeptId != null">#{sysDeptId},</if>
             <if test="esSourceId != null">#{esSourceId},</if>
+            <if test="onlineDomain != null and onlineDomain != ''">#{onlineDomain},</if>
+            <if test="grayDomain != null and grayDomain != ''">#{grayDomain},</if>
+            <if test="testDomain != null and testDomain != ''">#{testDomain},</if>
         </trim>
     </insert>
 
@@ -83,6 +93,9 @@
             <if test="isAuth != null">is_auth = #{isAuth},</if>
             <if test="sysDeptId != null">sys_dept_id = #{sysDeptId},</if>
             <if test="esSourceId != null">es_source_id = #{esSourceId},</if>
+            <if test="onlineDomain != null">online_domain = #{onlineDomain},</if>
+            <if test="grayDomain != null">gray_domain = #{grayDomain},</if>
+            <if test="testDomain != null">test_domain = #{testDomain},</if>
         </trim>
         where id = #{id}
     </update>

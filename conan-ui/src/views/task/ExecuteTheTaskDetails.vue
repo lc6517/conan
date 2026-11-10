@@ -31,6 +31,7 @@
       <el-table-column label="接口名称" align="center" prop="apiName" />
       <el-table-column label="最大录制数" align="center" prop="recordCount" />
       <el-table-column label="执行顺序" align="center" prop="position" />
+      <el-table-column label="忽略字段" align="center" prop="ignoreFields" show-overflow-tooltip />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -82,6 +83,9 @@
         </el-form-item>
         <el-form-item label="执行顺序" prop="position">
             <el-input-number v-model="form.position" controls-position="right" :min="0"  placeholder="请输入执行顺序" />
+        </el-form-item>
+        <el-form-item label="忽略字段" prop="ignoreFields">
+            <el-input v-model="form.ignoreFields" placeholder="多个字段用英文逗号分隔，如 timestamp,id" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -250,6 +254,7 @@ export default {
         let obj = {
           apiId: item.apiId,
           diffType: item.diffType,
+          ignoreFields: item.ignoreFields,
           id: item.id?item.id:0,
           position: item.position,
           recordCount: item.recordCount,
@@ -271,6 +276,7 @@ export default {
         apiId: null,
         recordCount: null,
         diffType: null,
+        ignoreFields: null,
         position: null,
       };
       this.resetForm("form");

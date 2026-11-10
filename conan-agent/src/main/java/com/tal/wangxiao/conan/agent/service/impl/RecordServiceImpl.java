@@ -260,10 +260,12 @@ public class RecordServiceImpl implements RecordService {
             redisTemplateTool.setLogByRecordId_INFO(recordId, "开始录制流量 " + domainOptional.get().getName() + api.getName());
             //查询并存储流量
             List<String> flowByEsClient = getFlowByEsClientAndSaveFLow(requestQuery, recordId, api.getDomainId());
-            log.info(api.getName() + "录制完成: 期望录制总数=" + recordDetail.getExpectCount() + "," + "实际录制总数=" + flowByEsClient.size());
-            redisTemplateTool.setLogByRecordId_INFO(recordId, api.getName() + "录制完成: 期望录制总数=" + recordDetail.getExpectCount() + "," + "实际录制总数=" + flowByEsClient.size());
-            totalActualCount += flowByEsClient.size();
-            recordDetail.setActualCount(flowByEsClient.size());
+            int actualSize = (flowByEsClient == null) ? 0 : flowByEsClient.size();
+            log.info(api.getName() + "录制完成: 期望录制总数=" + recordDetail.getExpectCount() + "," + "实际录制总数=" + actualSize);
+            redisTemplateTool.setLogByRecordId_INFO(recordId, api.getName() + "录制完成: 期望录制总数=" + recordDetail.getExpectCount() + "," + "实际录制总数=" + actualSize);
+            totalActualCount += actualSize;
+            recordDetail.setActualCount(actualSize);
+            log.info("recordDetail==" + recordDetail);
             recordDetailRepository.save(recordDetail);
         }
         redisTemplateTool.setRecordProgress(recordId, "99");
@@ -309,43 +311,95 @@ public class RecordServiceImpl implements RecordService {
                 .should(QueryBuilders.termQuery(domainKeyword + ".keyword", requestQuery.getDomain()));
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.wildcardQuery(url + ".keyword", method + " " + requestQuery.getApi() + "*"))
+//                改写by 10.27
+//                .must(QueryBuilders.wildcardQuery(url + ".keyword",  requestQuery.getApi()))
                 .must(shouldQuery);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        log.info(queryBuilder.toString());
+        log.info("agent 获取流量" + queryBuilder.toString());
+        log.info("agent url" + url);
+        log.info("agent getApi" +  requestQuery.getApi());
+
         sourceBuilder.query(queryBuilder);
-        sourceBuilder.sort("@timestamp", SortOrder.ASC);
+        // scroll 查询推荐使用 _doc 排序，避免对 text 字段(如 @timestamp)排序触发 fielddata 异常
+        sourceBuilder.sort("_doc", SortOrder.ASC);
         sourceBuilder.size(500);
         Scroll scroll = new Scroll(TimeValue.timeValueMinutes(10L));
         SearchRequest searchRequest = new SearchRequest();
-        searchRequest.source(sourceBuilder).scroll(scroll).indices();
+        searchRequest.indices(esConditionSetting.get().getIndexName()).source(sourceBuilder).scroll(scroll);
+        log.info("agent ES查询索引={}, 请求体={}", esConditionSetting.get().getIndexName(), sourceBuilder.toString());
         //根据域名获取对应es配置信息
         RestHighLevelClient restHighLevelClient = getRestHighLevelClient(domainId);
         try {
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            log.info("agent ES查询返回: 总命中数={}, 本批返回={}条, scrollId={}",
+                    searchResponse.getHits().getTotalHits(),
+                    searchResponse.getHits().getHits().length,
+                    searchResponse.getScrollId());
         } catch (Exception e) {
             redisTemplateTool.setLogByRecordId_WARN(recordId, "日志ES查询失败");
-            log.error("日志查询失败" + e);
+            log.error("日志ES查询失败, index={}, query={}, errMsg={}",
+                    esConditionSetting.get().getIndexName(), queryBuilder.toString(), e.getMessage(), e);
+            return null;
         }
         String scrollId = searchResponse.getScrollId();
         log.info("scroll_id=" + scrollId);
+
         totalElements = searchResponse.getHits().totalHits;
         int total = (int) totalElements;
-        log.info("查询到总流量" + totalElements + "条");
+        if(total==0){
+            log.info("查询到总流量agent为0，重置scan"+ scanElements +"条");
+            total = scanElements;
+        }
+        log.info("查询到总流量agent" + total + "条");
         int length = searchResponse.getHits().getHits().length;
-        log.info("查询到总流量 length" + length + "");
-        int page = total / 10000;//计算总页数,每次搜索数量为分片数*设置的size大小
+        log.info("查询到总流量 length agent" + length + "");
+        int page = total / 500;//计算总页数,每次搜索数量为分片数*设置的size大小
         page = page + 1;
+        log.info("共分"+page +"页");
+
         //控制单个接口录制条数
         for (int i = 0; i < page; i++) {
             if (i != 0) {
+                log.info("进入循环第%d轮录制es日志",i);
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(searchResponse.getScrollId());
                 scroll = new Scroll(TimeValue.timeValueMinutes(10L));
                 scrollRequest.scroll(scroll);
                 try {
                     searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                    log.info("agent ES scroll第{}轮返回: 本批返回={}条", i, searchResponse.getHits().getHits().length);
+                    for (SearchHit at : searchResponse.getHits().getHits()) {
+                        String requestId = at.getId();
+                        log.info(requestId);
+                        if (!"".equals(requestId)) {
+                            requestIdLists.add(requestId);
+                            //遍历流量并且存储
+                            saveFlowInDb(recordId, at, esConditionSetting.get());
+                            if (requestIdLists.size() == requestQuery.getCount()) {
+                                break;
+                            }
+                        }
+                    }
+
                 } catch (Exception e) {
                     log.error("日志查询失败");
                 }
+            }
+            else {
+                log.info("进入循环第一轮录制es日志");
+                //
+                for (SearchHit at : searchResponse.getHits().getHits()) {
+                    String requestId = at.getId();
+                    log.info(requestId);
+                    if (!"".equals(requestId)) {
+                        requestIdLists.add(requestId);
+                        //遍历流量并且存储
+                        saveFlowInDb(recordId, at, esConditionSetting.get());
+                        if (requestIdLists.size() == requestQuery.getCount()) {
+                            break;
+                        }
+                    }
+                }
+
             }
             //控制录制总流量数
             scanElements += length;
@@ -355,18 +409,6 @@ public class RecordServiceImpl implements RecordService {
             }
         }
         // 业务逻辑
-        for (SearchHit at : searchResponse.getHits().getHits()) {
-            String requestId = at.getId();
-            log.info(requestId);
-            if (!"".equals(requestId)) {
-                requestIdLists.add(requestId);
-                //遍历流量并且存储
-                saveFlowInDb(recordId, at, esConditionSetting.get());
-                if (requestIdLists.size() == requestQuery.getCount()) {
-                    break;
-                }
-            }
-        }
         //清除scroll
         ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
         clearScrollRequest.addScrollId(scrollId);//也可以选择setScrollIds()将多个scrollId一起使用
@@ -413,6 +455,8 @@ public class RecordServiceImpl implements RecordService {
     private void saveFlowInDb(int recordId, SearchHit hit, EsConditionSetting esConditionSetting) {
         RecordResult recordResult = new RecordResult();
         Map esFlowMap = hit.getSourceAsMap();
+        log.info("agent ES返回单条流量: requestId={}, index={}, source={}",
+                hit.getId(), hit.getIndex(), esFlowMap);
         String apiKey = esConditionSetting.getApi();
         //当URL中GET 请求参数是单独的字段存储的时候，采用接口key?参数key
         if (apiKey.contains("?")) {
@@ -423,52 +467,90 @@ public class RecordServiceImpl implements RecordService {
         String methodKey = esConditionSetting.getMethod();
         String requestBodyKey = esConditionSetting.getRequestBody();
         String headerKey = esConditionSetting.getHeader();
-        // 在获取不到key时避免抛出 NullPointerException 空指针异常
-        String apiName = RegexUtils.getMsgByRegex(esFlowMap.get(apiKey) + "", esConditionSetting.getApiRegex());
-        String method = RegexUtils.getMsgByRegex(esFlowMap.get(methodKey) + "", esConditionSetting.getMethodRegex());
-        Api api = getApiInfo(recordId,method,apiName);
-        if (api !=null) {
-            int apiId = api.getId();
-            List<Api> apiList = apiRepository.findByNameAndMethod(apiName, HttpMethodConstants.valueOf(method).getValue());
-            if (apiList.size() != 0) {
-                apiId = apiList.get(0).getId();
-                String body = RegexUtils.getMsgByRegex(esFlowMap.get(requestBodyKey) + "", esConditionSetting.getRequestBodyRegex());
-                String header = RegexUtils.getMsgByRegex(esFlowMap.get(headerKey) + "", esConditionSetting.getHeaderRegex());
-                String requestId = hit.getId();
-                recordResult.setApiId(apiId);
-                recordResult.setBody(body);
-                recordResult.setHeader(header);
-                recordResult.setRequestId(requestId);
-                recordResult.setRecordId(recordId);
-                recordResultRepository.save(recordResult);
-            } else {
-                log.error("未查询到api数据 API={}", apiName);
-            }
+
+        // === 步骤1: 从ES原始字段中用正则提取接口名、方法 ===
+        Object rawApiValue = esFlowMap.get(apiKey);
+        Object rawMethodValue = esFlowMap.get(methodKey);
+        String apiName = RegexUtils.getMsgByRegex(rawApiValue + "", esConditionSetting.getApiRegex());
+        String method = RegexUtils.getMsgByRegex(rawMethodValue + "", esConditionSetting.getMethodRegex());
+        log.info("agent 匹配判断[步骤1-正则提取] recordId={}, requestId={} | ES字段{}原始值=[{}] --正则[{}]--> 接口名=[{}] | ES字段{}原始值=[{}] --正则[{}]--> 方法=[{}]",
+                recordId, hit.getId(),
+                apiKey, rawApiValue, esConditionSetting.getApiRegex(), apiName,
+                methodKey, rawMethodValue, esConditionSetting.getMethodRegex(), method);
+
+        if (apiName == null || method == null) {
+            log.warn("agent 匹配判断[不满足] recordId={}, requestId={} | 原因: 正则提取失败, apiName={}, method={}",
+                    recordId, hit.getId(), apiName, method);
+            return;
         }
 
+        // === 步骤2: 用提取出的接口名+方法查DB的api表 ===
+        Api api = getApiInfo(recordId, method, apiName);
+
+        if (api == null) {
+            log.warn("agent 匹配判断[不满足] recordId={}, requestId={} | 原因: DB中未找到 接口名=[{}] 方法=[{}] 的API记录",
+                    recordId, hit.getId(), apiName, method);
+            return;
+        }
+        log.info("agent 匹配判断[步骤2-DB匹配成功] recordId={}, requestId={} | 命中API: id={}, name={}, method={}",
+                recordId, hit.getId(), api.getId(), api.getName(), api.getMethod());
+
+        // === 步骤3: 二次确认DB中存在同名同方法的API，并提取body/header落库 ===
+        List<Api> apiList = apiRepository.findByNameAndMethod(apiName, HttpMethodConstants.valueOf(method).getValue());
+        if (apiList.size() != 0) {
+            int apiId = apiList.get(0).getId();
+            String body = RegexUtils.getMsgByRegex(esFlowMap.get(requestBodyKey) + "", esConditionSetting.getRequestBodyRegex());
+            String header = RegexUtils.getMsgByRegex(esFlowMap.get(headerKey) + "", esConditionSetting.getHeaderRegex());
+            String requestId = hit.getId();
+            recordResult.setApiId(apiId);
+            recordResult.setBody(body);
+            recordResult.setHeader(header);
+            recordResult.setRequestId(requestId);
+            recordResult.setRecordId(recordId);
+            recordResultRepository.save(recordResult);
+            log.info("agent 匹配判断[满足-已落库] recordId={}, requestId={} | apiId={}, body长度={}, header长度={}",
+                    recordId, hit.getId(), apiId,
+                    body == null ? 0 : body.length(),
+                    header == null ? 0 : header.length());
+        } else {
+            log.warn("agent 匹配判断[不满足] recordId={}, requestId={} | 原因: 二次查询DB未找到 接口名=[{}] 方法=[{}] 的API",
+                    recordId, hit.getId(), apiName, method);
+        }
     }
 
 
-    private Api getApiInfo(Integer recordId, String method,String apiName) {
+    private Api getApiInfo(Integer recordId, String method, String apiName) {
+        // 按接口名+方法查DB
         List<Api> apiList = apiRepository.findByNameAndMethod(apiName, HttpMethodConstants.valueOf(method).getValue());
-        if(apiList == null) {
-            return null;
-        }
-        if(apiList.size()<1) {
-            return null;
-        }
-        List<RecordDetail> recordDetailList = recordDetailRepository.findByRecordId(recordId);
-        for (Api api : apiList) {
+        log.info("agent 匹配判断[getApiInfo] recordId={}, 接口名=[{}], 方法=[{}] | DB按name+method查到 {} 条API: {}",
+                recordId, apiName, method,
+                apiList == null ? 0 : apiList.size(),
+                apiList == null ? "[]" : apiList.stream().map(a -> "id=" + a.getId() + ",name=" + a.getName()).collect(java.util.stream.Collectors.toList()));
 
+        if (apiList == null || apiList.size() < 1) {
+            return null;
+        }
+
+        // 过滤: 只保留属于当前录制任务的API
+        List<RecordDetail> recordDetailList = recordDetailRepository.findByRecordId(recordId);
+        log.info("agent 匹配判断[getApiInfo] recordId={} | 当前录制任务关联API数={}, 关联apiId列表={}",
+                recordId, recordDetailList.size(),
+                recordDetailList.stream().map(RecordDetail::getApiId).collect(java.util.stream.Collectors.toList()));
+
+        for (Api api : apiList) {
             if (recordDetailList.isEmpty()) {
                 continue;
             }
             for (RecordDetail recordDetail : recordDetailList) {
                 if (recordDetail.getApiId().intValue() == api.getId().intValue()) {
+                    log.info("agent 匹配判断[getApiInfo] recordId={} | API(id={},name={}) 属于当前录制任务, 匹配命中",
+                            recordId, api.getId(), api.getName());
                     return api;
                 }
             }
         }
+        log.info("agent 匹配判断[getApiInfo] recordId={} | 查到的API均不属于当前录制任务, 兜底返回第一条: id={}, name={}",
+                recordId, apiList.get(0).getId(), apiList.get(0).getName());
         return apiList.get(0);
     }
 

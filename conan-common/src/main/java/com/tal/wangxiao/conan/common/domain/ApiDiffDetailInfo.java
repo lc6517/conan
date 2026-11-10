@@ -26,4 +26,13 @@ public class ApiDiffDetailInfo  {
 
     @ApiModelProperty("比对日志列表")
     List<DiffApiLogInfo> diffApiLogInfoList;
+
+    @ApiModelProperty("比对成功率（百分比，如 80.0）")
+    private String successRate;
+
+    @ApiModelProperty("通过条数")
+    private Integer passCount;
+
+    @ApiModelProperty("总条数")
+    private Integer totalCount;
 }

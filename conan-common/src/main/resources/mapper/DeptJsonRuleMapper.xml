@@ -27,6 +27,7 @@
             <if test="ruleJson != null  and ruleJson != ''"> and rule_json = #{ruleJson}</if>
             <if test="sysDeptId != null "> and sys_dept_id = #{sysDeptId}</if>
         ${params.dataScope}
+        order by dr.create_time desc
     </select>
 
     <select id="selectDeptJsonRuleById" parameterType="Integer" resultMap="DeptJsonRuleResult">

@@ -31,6 +31,7 @@
             <if test="response != null  and response != ''"> and response = #{response}</if>
             <if test="errorDesc != null  and errorDesc != ''"> and error_desc = #{errorDesc}</if>
         </where>
+        order by rs.schema_error_id desc
     </select>
 
     <select id="selectReplaySchemaErrorById" parameterType="Integer" resultMap="ReplaySchemaErrorResult">

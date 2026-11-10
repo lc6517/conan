@@ -200,6 +200,13 @@ public class ReplayServiceImpl implements ReplayService {
     @Async
     public Future<Map<Integer, Integer>> doReplay(int i, Integer recordId, Integer replayId, List<RecordResult> recordResultList) {
         log.info("线程{}执行回放", i);
+        // 通过 replayId 获取本次回放的环境（online/gray/test），用于选择对应域名
+        String replayEnv = null;
+        Optional<Replay> replayEnvOpt = replayRepository.findById(replayId);
+        if (replayEnvOpt.isPresent()) {
+            replayEnv = replayEnvOpt.get().getReplayEnv();
+        }
+        final String finalReplayEnv = replayEnv;
         Map<Integer, Integer> actualCountMap = Maps.newHashMap();
         for (RecordResult recordResult : recordResultList) {
             //回放接口response
@@ -221,7 +228,9 @@ public class ReplayServiceImpl implements ReplayService {
                 redisTemplateTool.setLogByReplayId_ERROR(replayId, "找不到该域名，domainId = " + api.getDomainId() + ", apiId = " + api.getId() + " ,回放失败");
                 continue;
             }
-            String domainName = domainOptional.get().getName();
+            Domain domain = domainOptional.get();
+            // 按本次回放的环境选择对应域名，未配置时回退到默认域名 name
+            String domainName = pickDomainByEnv(domain, finalReplayEnv);
             String method = EnumUtil.getByField(HttpMethodConstants.class, "getValue", String.valueOf(api.getMethod())).getLabel();
             String urlStr = "http://" + domainName + api.getName();
             String body = StringHandlerUtils.replaceSpeStr(recordResult.getBody());
@@ -285,6 +294,26 @@ public class ReplayServiceImpl implements ReplayService {
 
         }
         return new AsyncResult<>(actualCountMap);
+    }
+
+    /**
+     * 根据本次回放的环境选择对应的回放域名。
+     * 环境标识来自 bss_replay.replay_env（online/gray/test），由回放任务指定。
+     * 若对应环境的域名未配置，则回退到默认域名 name。
+     */
+    private String pickDomainByEnv(Domain domain, String replayEnv) {
+        String domainName;
+        if ("online".equalsIgnoreCase(replayEnv)) {
+            domainName = StringHandlerUtils.isNull(domain.getOnlineDomain()) ? domain.getName() : domain.getOnlineDomain();
+        } else if ("gray".equalsIgnoreCase(replayEnv)) {
+            domainName = StringHandlerUtils.isNull(domain.getGrayDomain()) ? domain.getName() : domain.getGrayDomain();
+        } else if ("test".equalsIgnoreCase(replayEnv)) {
+            domainName = StringHandlerUtils.isNull(domain.getTestDomain()) ? domain.getName() : domain.getTestDomain();
+        } else {
+            domainName = domain.getName();
+        }
+        log.info("回放域名选择 replayEnv={}, 实际使用域名={}", replayEnv, domainName);
+        return domainName;
     }
 
     //不知道流量的回放请求方式，采用多次重试请求

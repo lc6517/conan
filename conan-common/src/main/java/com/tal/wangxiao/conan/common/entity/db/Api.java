@@ -53,4 +53,8 @@ public class Api extends BaseEntity {
 
     @Column(name = "response_is_json")
     private Integer responseIsJson;
+
+    /** 忽略比对的字段，逗号分隔 */
+    @Column(name = "ignore_fields")
+    private String ignoreFields;
 }

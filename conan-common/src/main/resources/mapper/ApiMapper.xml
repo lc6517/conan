@@ -18,10 +18,12 @@
         <result property="createBy"    column="create_by"    />
         <result property="updateTime"    column="update_time"    />
         <result property="updateBy"    column="update_by"    />
+        <result property="responseIsJson"    column="response_is_json"    />
+        <result property="ignoreFields"    column="ignore_fields"    />
     </resultMap>
 
     <sql id="selectApiVo">
-        select api_id, sys_dept_id, domain_id, name,  method, is_online, is_read, is_enable, recordable_count, create_time, create_by, update_time, update_by, response_is_json from bss_api
+        select api_id, sys_dept_id, domain_id, name,  method, is_online, is_read, is_enable, recordable_count, create_time, create_by, update_time, update_by, response_is_json, ignore_fields from bss_api
     </sql>
 
     <select id="selectApiList" parameterType="ApiInfo" resultMap="ApiResult">
@@ -44,6 +46,7 @@
         <if test="responseIsJson != null "> and api.response_is_json = #{responseIsJson}</if>
         <!-- 数据范围过滤 -->
         ${params.dataScope}
+        order by api.update_time desc, api.create_time desc
     </select>
 
     <select id="selectApiById" parameterType="Integer" resultMap="ApiResult">
@@ -68,6 +71,7 @@
             <if test="updateTime != null">update_time,</if>
             <if test="updateBy != null">update_by,</if>
             <if test="responseIsJson != null">response_is_json,</if>
+            <if test="ignoreFields != null and ignoreFields != ''">ignore_fields,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="sysDeptId != null">#{sysDeptId},</if>
@@ -84,6 +88,7 @@
             <if test="updateTime != null">#{updateTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
             <if test="responseIsJson != null">#{responseIsJson},</if>
+            <if test="ignoreFields != null and ignoreFields != ''">#{ignoreFields},</if>
         </trim>
     </insert>
 
@@ -103,6 +108,7 @@
             <if test="updateTime != null">update_time = #{updateTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="responseIsJson != null">response_is_json = #{responseIsJson},</if>
+            <if test="ignoreFields != null">ignore_fields = #{ignoreFields},</if>
         </trim>
         where api_id = #{apiId}
     </update>

@@ -1,7 +1,7 @@
 
 # conan
 
-## 柯南流量回放平台
+## 流量回放平台
 English | [简体中文](readmeCN.md)
 <p align="left">
     <a href="https://github.com/1042970366/">
@@ -116,7 +116,7 @@ Server architecture
 **Platform capability and function**
 
 
-![柯南能力图.png](http://ttc-tal.oss-cn-beijing.aliyuncs.com/1605261800/%E6%9F%AF%E5%8D%97%E8%83%BD%E5%8A%9B%E5%9B%BE.png)
+![能力图.png](http://ttc-tal.oss-cn-beijing.aliyuncs.com/1605261800/%E6%9F%AF%E5%8D%97%E8%83%BD%E5%8A%9B%E5%9B%BE.png)
 
 
 **Instructions for use**

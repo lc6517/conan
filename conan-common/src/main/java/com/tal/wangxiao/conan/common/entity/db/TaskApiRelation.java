@@ -32,6 +32,9 @@ public class TaskApiRelation {
     @Column(name = "diff_type")
     private Integer diffType;
 
+    @Column(name = "ignore_fields")
+    private String ignoreFields;
+
     @Column(name = "position")
     private Integer position;
 

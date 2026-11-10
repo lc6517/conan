@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-container">
     <el-form
       :model="queryParams"
@@ -473,7 +473,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-/deep/ .big .el-form-item__label {
+::v-deep  .big .el-form-item__label {
   width: 260px;
 }
 </style>

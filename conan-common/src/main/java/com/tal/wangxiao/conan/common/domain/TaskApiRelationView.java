@@ -49,6 +49,12 @@ public class TaskApiRelationView  {
     @ApiModelProperty("diff 类型 ")
     private Integer diffType;
 
+    /**
+     * 忽略比对的字段（逗号分隔）
+     */
+    @ApiModelProperty("忽略比对的字段（逗号分隔）")
+    private String ignoreFields;
+
 
     @ApiModelProperty(name = "域名", hidden = true)
     private String domainName;
@@ -129,6 +135,14 @@ public class TaskApiRelationView  {
 
     public void setDiffType(Integer diffType) {
         this.diffType = diffType;
+    }
+
+    public String getIgnoreFields() {
+        return ignoreFields;
+    }
+
+    public void setIgnoreFields(String ignoreFields) {
+        this.ignoreFields = ignoreFields;
     }
 
   /*  public void setTaskId(Integer taskId) {

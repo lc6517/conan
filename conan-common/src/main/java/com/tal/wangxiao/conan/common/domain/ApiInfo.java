@@ -83,6 +83,16 @@ GET("GET", 0),
     @ApiModelProperty("接口响应是否是JSON")
     private Integer responseIsJson;
 
+    @ApiModelProperty("忽略比对的字段，逗号分隔")
+    private String ignoreFields;
+
+    public String getIgnoreFields() {
+        return ignoreFields;
+    }
+
+    public void setIgnoreFields(String ignoreFields) {
+        this.ignoreFields = ignoreFields;
+    }
 
     public Integer getResponseIsJson() {
         return responseIsJson;
@@ -219,6 +229,7 @@ GET("GET", 0),
             .append("isRead", getIsRead())
             .append("isEnable", getIsEnable())
             .append("recordableCount", getRecordableCount())
+            .append("ignoreFields", getIgnoreFields())
             .append("createTime", getCreateTime())
             .append("createBy", getCreateBy())
             .append("updateTime", getUpdateTime())

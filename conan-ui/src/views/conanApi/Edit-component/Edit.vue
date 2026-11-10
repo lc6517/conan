@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="postman">
     <!-- 请求方式、链接 -->
     <div class="postman-header">
@@ -588,7 +588,7 @@ export default {
         margin-left: 10px;
       }
 
-      /deep/.el-input__inner {
+      ::v-deep .el-input__inner {
         width: 100px;
         height: 30px;
         line-height: 30px;

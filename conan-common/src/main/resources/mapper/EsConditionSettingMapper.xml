@@ -42,6 +42,7 @@
             <if test="headerRegex != null  and headerRegex != ''"> and header_regex = #{headerRegex}</if>
             <if test="esSourceId != null  and esSourceId != ''"> and es_source_id = #{esSourceId}</if>
         </where>
+        order by es_setting_id desc
     </select>
 
     <select id="selectEsConditionSettingById" parameterType="Long" resultMap="EsConditionSettingResult">
